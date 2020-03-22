@@ -2,7 +2,7 @@
 
 ### Lab 1 - Feature extraction
 - [X] Compute MFCC features step-by-step.
-- [-] Examine features.
+- [Y] Examine features.
 - [] Evaluate correlation between feature.
 - [] Compare utterances with Dynamic Time Warping.
 - [] Illustrate the discriminative power of the features with respect to words.
