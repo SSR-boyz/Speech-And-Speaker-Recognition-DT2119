@@ -7,7 +7,7 @@
 - [ ] Compare utterances with Dynamic Time Warping.
 - [ ] Illustrate the discriminative power of the features with respect to words.
 - [ ] Perform hierarchical clustering of utterances.
-- [ ] Yrain and analyze a Gaussian Mixture Model of the feature vectors.
+- [ ] Train and analyze a Gaussian Mixture Model of the feature vectors.
 
 
 ### Lab 2 - Hidden Markov Models with Gaussian Emissions
