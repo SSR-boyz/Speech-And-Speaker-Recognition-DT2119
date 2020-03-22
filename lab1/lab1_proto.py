@@ -1,8 +1,20 @@
 # DT2119, Lab 1 Feature Extraction
+import numpy as np
+import matplotlib.pyplot as plt
+
+example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
+data = np.load('lab1_data.npz', allow_pickle=True)['data']
+print(np.size(example['samples']))
+print(example['samples'])
+plt.plot(example['samples'])
+plt.show()
+#plt.pcolormesh(example['frames'])
+#plt.show()
+#mspec(example['samples'])
 
 # Function given by the exercise ----------------------------------
 
-def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, samplingrate=20000)
+def mspec(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, samplingrate=20000):
     """Computes Mel Filterbank features.
 
     Args:
@@ -56,6 +68,8 @@ def enframe(samples, winlen, winshift):
         in the input signal
     """
     
+    return 1
+    
 def preemp(input, p=0.97):
     """
     Pre-emphasis filter.
@@ -69,6 +83,8 @@ def preemp(input, p=0.97):
         output: array of pre-emphasised speech samples
     Note (you can use the function lfilter from scipy.signal)
     """
+    return 1
+
 
 def windowing(input):
     """
@@ -83,6 +99,9 @@ def windowing(input):
     if you want to get the same results as in the example)
     """
 
+    return 1
+
+
 def powerSpectrum(input, nfft):
     """
     Calculates the power spectrum of the input signal, that is the square of the modulus of the FFT
@@ -95,6 +114,8 @@ def powerSpectrum(input, nfft):
         array of power spectra [N x nfft]
     Note: you can use the function fft from scipy.fftpack
     """
+
+    return 1
 
 def logMelSpectrum(input, samplingrate):
     """
@@ -110,6 +131,7 @@ def logMelSpectrum(input, samplingrate):
     Note: use the trfbank function provided in lab1_tools.py to calculate the filterbank shapes and
           nmelfilters
     """
+    return 1
 
 def cepstrum(input, nceps):
     """
@@ -123,6 +145,8 @@ def cepstrum(input, nceps):
         array of Cepstral coefficients [N x nceps]
     Note: you can use the function dct from scipy.fftpack.realtransforms
     """
+
+    return 1
 
 def dtw(x, y, dist):
     """Dynamic Time Warping.
@@ -140,3 +164,4 @@ def dtw(x, y, dist):
 
     Note that you only need to define the first output for this exercise.
     """
+    return 1
