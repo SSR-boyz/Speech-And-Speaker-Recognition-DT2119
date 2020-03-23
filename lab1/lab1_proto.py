@@ -1,16 +1,11 @@
 # DT2119, Lab 1 Feature Extraction
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.signal as sis
 
 example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
 data = np.load('lab1_data.npz', allow_pickle=True)['data']
-print(np.size(example['samples']))
-print(example['samples'])
-plt.plot(example['samples'])
-plt.show()
-#plt.pcolormesh(example['frames'])
-#plt.show()
-#mspec(example['samples'])
+
 
 # Function given by the exercise ----------------------------------
 
@@ -64,13 +59,32 @@ def enframe(samples, winlen, winshift):
         winlen: window length in samples.
         winshift: shift of consecutive windows in samples
     Returns:
-        numpy array [N x winlen], where N is the number of windows that fit
+    
+    range(0, np.size(samples))    numpy array [N x winlen], where N is the number of windows that fit
         in the input signal
     """
+
+    #samples >= winshift*N+winlen
+
+    #M = int((len(samples)-winshift)/winshift)
+
+    N = int((len(samples)-winshift)/winshift) #Lucas' fundamental theory of "att räkna ut windows"
+    windows = np.zeros((N, winlen))
+    windows_num = 0
     
-    return 1
+    for i in range(0, len(samples), winshift):
+        if i+winlen > len(samples):
+            break
+
+        window_iter = np.arange(i,i+winlen)
+        windows[windows_num] = samples[window_iter]
+        windows_num += 1
     
-def preemp(input, p=0.97):
+    sis.windowed()
+    return windows
+    
+    
+def preemp(inputs, p=0.97):
     """
     Pre-emphasis filter.
 
@@ -79,14 +93,18 @@ def preemp(input, p=0.97):
                M the samples per frame
         p: preemhasis factor (defaults to the value specified in the exercise)
 
-    Output:
+    Output:4
         output: array of pre-emphasised speech samples
     Note (you can use the function lfilter from scipy.signal)
-    """
-    return 1
+    """    
 
 
-def windowing(input):
+    A = [1]
+    B = [1, -p]
+    return sis.lfilter(B, A, inputs, axis=1)
+
+
+def windowing(inputs):
     """
     Applies hamming window to the input frames.
 
@@ -98,11 +116,11 @@ def windowing(input):
     Note (you can use the function hamming from scipy.signal, include the sym=0 option
     if you want to get the same results as in the example)
     """
+    
+    return inputs * sis.hamming(400, sym=False)
 
-    return 1
 
-
-def powerSpectrum(input, nfft):
+def powerSpectrum(inputs, nfft):
     """
     Calculates the power spectrum of the input signal, that is the square of the modulus of the FFT
 
@@ -117,7 +135,7 @@ def powerSpectrum(input, nfft):
 
     return 1
 
-def logMelSpectrum(input, samplingrate):
+def logMelSpectrum(inputs, samplingrate):
     """
     Calculates the log output of a Mel filterbank when the input is the power spectrum
 
@@ -133,7 +151,7 @@ def logMelSpectrum(input, samplingrate):
     """
     return 1
 
-def cepstrum(input, nceps):
+def cepstrum(inputs, nceps):
     """
     Calulates Cepstral coefficients from mel spectrum applying Discrete Cosine Transform
 
@@ -165,3 +183,38 @@ def dtw(x, y, dist):
     Note that you only need to define the first output for this exercise.
     """
     return 1
+
+
+#print(np.size(example['samples']))
+#print(example['samples'])
+plt.plot(example['samples'])
+plt.show()
+#plt.pcolormesh(example['frames'])
+#plt.show()
+#mspec(example['samples'])
+
+
+windows = enframe(example['samples'], 400, 200)
+#plt.plot(windows)
+#plt.pcolormesh(windows)
+plt.show()
+
+
+# Deras
+#plt.pcolor(example['preemph'])
+#plt.show()
+
+
+preemp_window = preemp(windows)
+#plt.plot(preemp_window)
+#plt.pcolor(preemp_window)
+plt.show()
+
+
+#windowing = windowing(preemp_window)
+#plt.pcolor(windowing)
+#plt.show()
+
+
+
+
