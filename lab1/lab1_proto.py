@@ -2,6 +2,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as sis
+import scipy.fftpack as sisfft
+import lab1_tools as lab1tools
+from more_itertools import windowed
+
+
+
 
 example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
 data = np.load('lab1_data.npz', allow_pickle=True)['data']
@@ -47,7 +53,7 @@ def mfcc(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, ncep
     """
     mspecs = mspec(samples, winlen, winshift, preempcoeff, nfft, samplingrate)
     ceps = cepstrum(mspecs, nceps)
-    return lifter(ceps, liftercoeff)
+    return lab1tools.lifter(ceps, liftercoeff)
 
 # Functions to be implemented ----------------------------------
 
@@ -67,7 +73,7 @@ def enframe(samples, winlen, winshift):
     #samples >= winshift*N+winlen
 
     #M = int((len(samples)-winshift)/winshift)
-
+    """
     N = int((len(samples)-winshift)/winshift) #Lucas' fundamental theory of "att räkna ut windows"
     windows = np.zeros((N, winlen))
     windows_num = 0
@@ -80,8 +86,9 @@ def enframe(samples, winlen, winshift):
         windows[windows_num] = samples[window_iter]
         windows_num += 1
     
-    sis.windowed()
-    return windows
+    """
+    win = list(windowed(samples, winlen, fillvalue=0, step=winshift))
+    return np.asarray(win)
     
     
 def preemp(inputs, p=0.97):
@@ -132,8 +139,8 @@ def powerSpectrum(inputs, nfft):
         array of power spectra [N x nfft]
     Note: you can use the function fft from scipy.fftpack
     """
-
-    return 1
+    return np.abs(sisfft.fft(inputs, nfft)) **2
+    
 
 def logMelSpectrum(inputs, samplingrate):
     """
@@ -149,7 +156,8 @@ def logMelSpectrum(inputs, samplingrate):
     Note: use the trfbank function provided in lab1_tools.py to calculate the filterbank shapes and
           nmelfilters
     """
-    return 1
+    fbank = lab1tools.trfbank(samplingrate, np.size(inputs, axis=1))
+    return np.log(inputs @ fbank.T)
 
 def cepstrum(inputs, nceps):
     """
@@ -164,7 +172,8 @@ def cepstrum(inputs, nceps):
     Note: you can use the function dct from scipy.fftpack.realtransforms
     """
 
-    return 1
+    #return sisfft.dct(inputs, n=nceps)
+    return sisfft.dct(inputs)[:, :nceps]
 
 def dtw(x, y, dist):
     """Dynamic Time Warping.
@@ -187,8 +196,8 @@ def dtw(x, y, dist):
 
 #print(np.size(example['samples']))
 #print(example['samples'])
-plt.plot(example['samples'])
-plt.show()
+#plt.plot(example['samples'])
+#plt.show()
 #plt.pcolormesh(example['frames'])
 #plt.show()
 #mspec(example['samples'])
@@ -197,24 +206,36 @@ plt.show()
 windows = enframe(example['samples'], 400, 200)
 #plt.plot(windows)
 #plt.pcolormesh(windows)
-plt.show()
-
-
-# Deras
-#plt.pcolor(example['preemph'])
 #plt.show()
 
 
 preemp_window = preemp(windows)
 #plt.plot(preemp_window)
-#plt.pcolor(preemp_window)
-plt.show()
-
-
-#windowing = windowing(preemp_window)
-#plt.pcolor(windowing)
+#plt.pcolormesh(preemp_window)
 #plt.show()
 
 
+windowing = windowing(preemp_window)
+#plt.pcolormesh(windowing)
+#plt.show()
 
 
+pSpec = powerSpectrum(windowing,512)
+
+#print(pSpec)
+#plt.plot(pSpec)
+#plt.pcolormesh(pSpec)
+#plt.show()
+#plt.pcolormesh(example['spec'])
+#plt.show()
+
+melSpec = logMelSpectrum(pSpec,20000)
+#plt.pcolor(melSpec)
+#plt.show()
+
+cStrum = cepstrum(melSpec,13)
+l = lab1tools.lifter(cStrum, 22)
+plt.pcolor(example['lmfcc'])
+plt.show()
+plt.pcolor(l)
+plt.show()
