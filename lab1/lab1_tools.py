@@ -40,8 +40,11 @@ def lifter(mfcc, lifter=22):
     Returns:
        NxM array with lifeterd coefficients
     """
+
+    #print(mfcc.shape)
     nframes, nceps = mfcc.shape
     cepwin = 1.0 + lifter/2.0 * np.sin(np.pi * np.arange(nceps) / lifter)
+     
     return np.multiply(mfcc, np.tile(cepwin, nframes).reshape((nframes,nceps)))
 
 def hz2mel(f):

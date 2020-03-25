@@ -5,7 +5,7 @@ import scipy.signal as sis
 import scipy.fftpack as sisfft
 import lab1_tools as lab1tools
 from more_itertools import windowed
-
+from sklearn import mixture
 
 
 
@@ -53,7 +53,10 @@ def mfcc(samples, winlen = 400, winshift = 200, preempcoeff=0.97, nfft=512, ncep
     """
     mspecs = mspec(samples, winlen, winshift, preempcoeff, nfft, samplingrate)
     ceps = cepstrum(mspecs, nceps)
-    return lab1tools.lifter(ceps, liftercoeff)
+    ans = lab1tools.lifter(ceps, liftercoeff)
+   
+   # print(ans.size)
+    return ans
 
 # Functions to be implemented ----------------------------------
 
@@ -193,7 +196,15 @@ def dtw(x, y, dist):
     """
     return 1
 
-
+def select_number(data, digit):
+    X_test = np.empty((0, 13))
+    c = 0
+    for d in data:
+        if d['digit'] == digit and d['speaker'] == 'bm' and d['repetition'] == 'a' and d['gender'] == 'man':
+            print(d['digit'], d['speaker'], d['repetition'], d['gender'])
+            X_test = np.concatenate((X_test, mfcc(d['samples'])), axis=0)
+            c+=1
+    return X_test
 #print(np.size(example['samples']))
 #print(example['samples'])
 #plt.plot(example['samples'])
@@ -203,25 +214,81 @@ def dtw(x, y, dist):
 #mspec(example['samples'])
 
 
-windows = enframe(example['samples'], 400, 200)
+# LORD
+result = mfcc(data[0]['samples'])
+matrix = np.array(result)
+#target = np.tile(data[0]['digit'], (np.shape()))
+#result = mspec(data[0]['samples'])
+#matrix2 = np.array(result)
+for i in range(1,44):
+    result = mfcc(data[i]['samples'])
+    result = np.array(result)
+    matrix = np.concatenate((matrix, result), axis=0)
+    #result = mspec(data[i]['samples'])
+    #result = np.array(result)
+    #matrix2 = np.concatenate((matrix2, result), axis=0)
+    
+    
+
+print(matrix.shape)
+    
+    
+
+print(matrix.shape)
+
+'''
+covar = np.cov(matrix, rowvar=False)
+plt.pcolormesh(covar)
+plt.show()
+covar = np.cov(matrix2, rowvar=False)
+plt.pcolormesh(covar)
+plt.show()
+'''
+
+gmm = mixture.GaussianMixture(32, covariance_type='diag')
+gmm.fit(matrix)
+
+inputs = np.array(mfcc(data[16]['samples']))
+inputs = np.concatenate((inputs, mfcc(data[17]['samples'])), axis=0)
+inputs = np.concatenate((inputs, mfcc(data[38]['samples'])), axis=0)
+inputs = np.concatenate((inputs, mfcc(data[39]['samples'])), axis=0)
+
+all_inputs = np.array([mfcc(data[16]['samples']), mfcc(data[17]['samples']), mfcc(data[38]['samples']), mfcc(data[39]['samples'])])
+colors = np.array(['g','b','r','y'])
+#inputs = select_number(data, '7')
+print(inputs.shape)
+
+y = gmm.predict_proba(inputs)
+for i in range(4):
+    y_idx = gmm.predict(all_inputs[i])
+    x = np.arange(len(y_idx))
+    noise = np.random.normal(loc=0,scale=0.2,size=len(y_idx))
+    plt.scatter(y_idx + noise,x+noise , c=colors[i])
+#print(y_idx)
+plt.show()
+#plt.pcolormesh(y)
+#plt.show()
+
+#for i in range(1,44):
+
+#windows = enframe(example['samples'], 400, 200)
 #plt.plot(windows)
 #plt.pcolormesh(windows)
 #plt.show()
 
 
-preemp_window = preemp(windows)
+#preemp_window = preemp(windows)
 #plt.plot(preemp_window)
 #plt.pcolormesh(preemp_window)
 #plt.show()
 
 
-windowing = windowing(preemp_window)
+#windowing = windowing(preemp_window)
 #plt.pcolormesh(windowing)
 #plt.show()
 
 
-pSpec = powerSpectrum(windowing,512)
-
+#pSpec = powerSpectrum(windowing,512)
 #print(pSpec)
 #plt.plot(pSpec)
 #plt.pcolormesh(pSpec)
@@ -229,13 +296,14 @@ pSpec = powerSpectrum(windowing,512)
 #plt.pcolormesh(example['spec'])
 #plt.show()
 
-melSpec = logMelSpectrum(pSpec,20000)
+#melSpec = logMelSpectrum(pSpec,20000)
 #plt.pcolor(melSpec)
 #plt.show()
 
-cStrum = cepstrum(melSpec,13)
-l = lab1tools.lifter(cStrum, 22)
-plt.pcolor(example['lmfcc'])
-plt.show()
-plt.pcolor(l)
-plt.show()
+#cStrum = cepstrum(melSpec,13)
+
+#l = lab1tools.lifter(cStrum, 22)
+#plt.pcolor(example['lmfcc'])
+#plt.show()
+#plt.pcolor(l)
+#plt.show()
