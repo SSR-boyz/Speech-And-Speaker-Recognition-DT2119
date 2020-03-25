@@ -6,7 +6,7 @@ import scipy.fftpack as sisfft
 import lab1_tools as lab1tools
 from more_itertools import windowed
 from sklearn import mixture
-
+from scipy.cluster.hierarchy import dendrogram, linkage
 
 
 example = np.load('lab1_example.npz', allow_pickle=True)['example'].item()
@@ -178,6 +178,9 @@ def cepstrum(inputs, nceps):
     #return sisfft.dct(inputs, n=nceps)
     return sisfft.dct(inputs)[:, :nceps]
 
+def euclidean(a, b):
+    return np.linalg.norm(a-b)
+
 def dtw(x, y, dist):
     """Dynamic Time Warping.
 
@@ -194,17 +197,32 @@ def dtw(x, y, dist):
 
     Note that you only need to define the first output for this exercise.
     """
-    return 1
+    N = x.shape[0]
+    M = y.shape[0]
+    LD = np.zeros(N, M)
+    for i, x_vec in enumerate(x):
+        for j, y_vec in enumerate(y):
+            LD[i][j] = dist(x_vec, y_vec)
+    
 
-def select_number(data, digit):
-    X_test = np.empty((0, 13))
-    c = 0
-    for d in data:
-        if d['digit'] == digit and d['speaker'] == 'bm' and d['repetition'] == 'a' and d['gender'] == 'man':
-            print(d['digit'], d['speaker'], d['repetition'], d['gender'])
-            X_test = np.concatenate((X_test, mfcc(d['samples'])), axis=0)
-            c+=1
-    return X_test
+    return LD
+
+
+def dtw2(s, t, dist):
+    n, m = s.shape[0], t.shape[0]
+    dtw_matrix = np.inf * np.ones((n+1, m+1))
+   
+    dtw_matrix[0, 0] = 0
+    
+    for i in range(1, n+1):
+        for j in range(1, m+1):
+            cost = dist(s[i-1],t[j-1])
+            # take last min from a square box
+            last_min = np.min([dtw_matrix[i-1, j], dtw_matrix[i, j-1], dtw_matrix[i-1, j-1]])
+            dtw_matrix[i, j] = cost + last_min
+    return dtw_matrix[-1][-1]/ (len(s) + len(t))
+
+    
 #print(np.size(example['samples']))
 #print(example['samples'])
 #plt.plot(example['samples'])
@@ -244,7 +262,7 @@ covar = np.cov(matrix2, rowvar=False)
 plt.pcolormesh(covar)
 plt.show()
 '''
-
+'''
 gmm = mixture.GaussianMixture(32, covariance_type='diag')
 gmm.fit(matrix)
 
@@ -263,9 +281,31 @@ for i in range(4):
     y_idx = gmm.predict(all_inputs[i])
     x = np.arange(len(y_idx))
     noise = np.random.normal(loc=0,scale=0.2,size=len(y_idx))
-    plt.scatter(y_idx + noise,x+noise , c=colors[i])
-#print(y_idx)
+    #plt.scatter(y_idx + noise,x+noise , c=colors[i])
+
+D = np.zeros((44,44))
+
+for i in range(44):
+    print("epoch: " + str(i) + " of " + str(44))
+    for j in range(44):
+       D[i][j] = dtw2(mfcc(data[i]['samples']), mfcc(data[j]['samples']), euclidean)
+
+np.savetxt('D.txt', D)
+'''
+
+#dtw2(data[17])
+
+D = np.loadtxt('D.txt')
+#print(D)
+#plt.pcolormesh(D)
+#plt.show()
+labels = lab1tools.tidigit2labels(data)
+Z = linkage(D, 'complete')
+fig = plt.figure()
+dn = dendrogram(Z, labels=labels, orientation='right')
 plt.show()
+#print(y_idx)
+#plt.show()
 #plt.pcolormesh(y)
 #plt.show()
 
