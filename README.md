@@ -1,13 +1,13 @@
 # Speech-And-Speaker-Recognition-DT2119
 
 ### Lab 1 - Feature extraction
-- [ ] Compute MFCC features step-by-step.
-- [ ] Examine features.
-- [ ] Evaluate correlation between feature.
-- [ ] Compare utterances with Dynamic Time Warping.
-- [ ] Illustrate the discriminative power of the features with respect to words.
-- [ ] Perform hierarchical clustering of utterances.
-- [ ] Train and analyze a Gaussian Mixture Model of the feature vectors.
+- [X] Compute MFCC features step-by-step.
+- [X] Examine features.
+- [X] Evaluate correlation between feature.
+- [X] Compare utterances with Dynamic Time Warping.
+- [X] Illustrate the discriminative power of the features with respect to words.
+- [X] Perform hierarchical clustering of utterances.
+- [X] Train and analyze a Gaussian Mixture Model of the feature vectors.
 
 
 ### Lab 2 - Hidden Markov Models with Gaussian Emissions
