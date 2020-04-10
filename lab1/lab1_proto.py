@@ -254,14 +254,14 @@ print(matrix.shape)
 
 print(matrix.shape)
 
-'''
+
 covar = np.cov(matrix, rowvar=False)
 plt.pcolormesh(covar)
 plt.show()
-covar = np.cov(matrix2, rowvar=False)
-plt.pcolormesh(covar)
-plt.show()
-'''
+#covar = np.cov(matrix2, rowvar=False)
+#plt.pcolormesh(covar)
+#plt.show()
+
 '''
 gmm = mixture.GaussianMixture(32, covariance_type='diag')
 gmm.fit(matrix)
@@ -304,46 +304,51 @@ Z = linkage(D, 'complete')
 fig = plt.figure()
 dn = dendrogram(Z, labels=labels, orientation='right')
 plt.show()
+
+
 #print(y_idx)
 #plt.show()
 #plt.pcolormesh(y)
 #plt.show()
 
 #for i in range(1,44):
+plt.plot(example['samples'])
+plt.show()
 
-#windows = enframe(example['samples'], 400, 200)
+windows = enframe(example['samples'], 400, 200)
 #plt.plot(windows)
-#plt.pcolormesh(windows)
-#plt.show()
+plt.pcolormesh(windows)
+plt.show()
 
 
-#preemp_window = preemp(windows)
+preemp_window = preemp(windows)
 #plt.plot(preemp_window)
-#plt.pcolormesh(preemp_window)
-#plt.show()
+plt.pcolormesh(preemp_window)
+plt.show()
 
 
-#windowing = windowing(preemp_window)
-#plt.pcolormesh(windowing)
-#plt.show()
+windowing = windowing(preemp_window)
+plt.pcolormesh(windowing)
+plt.show()
 
 
-#pSpec = powerSpectrum(windowing,512)
+pSpec = powerSpectrum(windowing,512)
 #print(pSpec)
 #plt.plot(pSpec)
-#plt.pcolormesh(pSpec)
-#plt.show()
+plt.pcolormesh(pSpec)
+plt.show()
 #plt.pcolormesh(example['spec'])
 #plt.show()
 
-#melSpec = logMelSpectrum(pSpec,20000)
-#plt.pcolor(melSpec)
-#plt.show()
+melSpec = logMelSpectrum(pSpec,20000)
+plt.pcolor(melSpec)
+plt.show()
 
-#cStrum = cepstrum(melSpec,13)
-
-#l = lab1tools.lifter(cStrum, 22)
+cStrum = cepstrum(melSpec,13)
+plt.pcolor(cStrum)
+plt.show()
+l = lab1tools.lifter(cStrum, 22)
 #plt.pcolor(example['lmfcc'])
 #plt.show()
-#plt.pcolor(l)
-#plt.show()
+plt.pcolor(l)
+plt.show()
