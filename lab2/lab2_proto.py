@@ -2,7 +2,7 @@ import numpy as np
 from lab2_tools import *
 from prondict import prondict
 import matplotlib.pyplot as plt
-phoneHMMs = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
+phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
 example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
 
 def concatTwoHMMs(hmm1, hmm2):
@@ -115,14 +115,14 @@ def forward(log_emlik, log_startprob, log_transmat):
     """
     def alphas(n, a, log_emlik, log_startprob, log_transmat):
         if n == 0:
-            a[0] = log_startprob + log_emlik[0]
+            a[0] = np.log(log_startprob) + log_emlik[0]
             return a[0]
         else:
             a[n-1] = alphas(n-1, a, log_emlik, log_startprob, log_transmat)
             
             _,M = np.shape(log_emlik)
-            for j in range(0, M-1):
-                a[n][j] = logsumexp(a[n-1] + log_transmat[:,j]) + log_emlik[j][n]
+            for j in range(0, M):
+                a[n][j] = logsumexp(a[n-1] + np.log(log_transmat[:,j])) + log_emlik[n][j]
             return a[n]
 
 
@@ -130,8 +130,7 @@ def forward(log_emlik, log_startprob, log_transmat):
     N, M = np.shape(log_emlik)
     alphas(N-1, alpha, log_emlik, log_startprob, log_transmat)
 
-    return alpha
-
+    return alpha, logsumexp(alpha[N-1])
 
 def backward(log_emlik, log_startprob, log_transmat):
     """Backward (beta) probabilities in log domain.
@@ -159,7 +158,25 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
         viterbi_loglik: log likelihood of the best path
         viterbi_path: best path
     """
+    N, M = log_emlik.shape
+    B = np.zeros((N, M))
+    V = np.zeros((N, M))
+    V[0] = np.log(log_startprob) + log_emlik[0]
 
+    for t in range(1, N):
+        for j in range(M):
+            V[t][j] = np.max(V[t-1] + np.log(log_transmat[:,j])) + log_emlik[t][j]
+            B[t][j] = np.argmax(V[t-1] + np.log(log_transmat[:,j]))
+    
+    best_score = np.max(V[t])
+    
+    path = zeros((1,N))
+    path[t-1] = np.argmax(B[t])
+
+    for t in range(N-2, 0, -1):
+        path[t] = B[t+1,path[t+1]]
+    
+    return path, best_score
 def statePosteriors(log_alpha, log_beta):
     """State posterior (gamma) probabilities in log domain.
 
@@ -191,26 +208,33 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
 
 ### WORK
 
+### WORK
+
 isolated = {}
 wordHMMs = {}
+maxlikelihood = 0
 for digit in prondict:
     isolated[digit] = ['sil'] + prondict[digit] + ['sil']
     wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
+    #obsloglik = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs[digit]['means'], wordHMMs[digit]['covars'])
+    #alpha, likelihood = forward(obsloglik, wordHMMs[digit]['startprob'][:-1], wordHMMs[digit]['transmat'][:-1, :-1])
+    #print(likelihood)
 
 
 obsloglik = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'], wordHMMs['o']['covars'])
 
 #print(wordHMMs['o']['startprob'].shape)
 #print(wordHMMs['o']['transmat'].shape)
-alpha = forward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
 
-#plt.pcolormesh(example['logalpha'])
-#plt.show()
+alpha, likelihood = forward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
+print(likelihood)
+print(example['loglik'])
 plt.pcolormesh(alpha)
+plt.show()
+plt.pcolormesh(example['logalpha'])
 plt.show()
 #print(wordHMMs['o']['transmat'].shape)
 #print(obsloglik.shape)
-
 
 """ 5.1 plots
 obsloglik_z = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['z']['means'], wordHMMs['z']['covars'])
