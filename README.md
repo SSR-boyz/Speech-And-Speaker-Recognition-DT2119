@@ -11,8 +11,8 @@
 
 
 ### Lab 2 - Hidden Markov Models with Gaussian Emissions
-- [ ] Combine phonetic HMMs into word HMMs using a lexicon 
-- [ ] Implement the forward-backward algorithm, 
+- [X] Combine phonetic HMMs into word HMMs using a lexicon 
+- [X] Implement the forward-backward algorithm, 
 - [ ] Use it compute the log likelihood of spoken utterances given a Gaussian HMM 
 - [ ] Perform isolated word recognition 
 - [ ] Implement the Viterbi algorithm, and use it to compute Viterbi path and likelihood 
