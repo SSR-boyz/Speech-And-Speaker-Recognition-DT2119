@@ -2,7 +2,7 @@ import numpy as np
 from lab2_tools import *
 from prondict import prondict
 import matplotlib.pyplot as plt
-phoneHMMs = np.load('lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
+phoneHMMs = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
 example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
 
 def concatTwoHMMs(hmm1, hmm2):
@@ -143,6 +143,24 @@ def backward(log_emlik, log_startprob, log_transmat):
     Output:
         backward_prob: NxM array of backward log probabilities for each of the M states in the model
     """
+    def betas(n, beta, log_emlik, log_startprob, log_transmat):
+        N, M = log_emlik.shape
+        if n == N - 1:
+            beta[N-1] = np.zeros([1,M])
+            return beta[N-1]
+        else:
+            beta[n+1] = betas(n+1, beta, log_emlik, log_startprob, log_transmat)
+            for i in range(0, M):
+
+                beta[n][i] = logsumexp( np.log(log_transmat[i, :]) + log_emlik[n+1] + beta[n+1] ) 
+                
+            return beta[n]
+    
+    beta = np.zeros(np.shape(log_emlik))
+    N, M = np.shape(log_emlik)
+    betas(0, beta, log_emlik, log_startprob, log_transmat)
+    
+    return beta, logsumexp(beta[0])    
 
 def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
     """Viterbi path.
@@ -177,6 +195,7 @@ def viterbi(log_emlik, log_startprob, log_transmat, forceFinalState=True):
         path[t] = B[t+1,path[t+1]]
     
     return path, best_score
+
 def statePosteriors(log_alpha, log_beta):
     """State posterior (gamma) probabilities in log domain.
 
@@ -188,6 +207,14 @@ def statePosteriors(log_alpha, log_beta):
     Output:
         log_gamma: NxM array of gamma probabilities for each of the M states in the model
     """
+    N, M = log_alpha.shape
+    log_gamma = np.zeros(np.shape(log_alpha))
+    
+    for n in range(N):
+        log_gamma[n] = log_alpha[n] + log_beta[n] - logsumexp(log_alpha[N-1])    
+    
+    return log_gamma
+
 
 def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
     """ Update Gaussian parameters with diagonal covariance
@@ -208,8 +235,6 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
 
 ### WORK
 
-### WORK
-
 isolated = {}
 wordHMMs = {}
 maxlikelihood = 0
@@ -225,7 +250,7 @@ obsloglik = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']
 
 #print(wordHMMs['o']['startprob'].shape)
 #print(wordHMMs['o']['transmat'].shape)
-
+"""
 alpha, likelihood = forward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
 print(likelihood)
 print(example['loglik'])
@@ -233,8 +258,27 @@ plt.pcolormesh(alpha)
 plt.show()
 plt.pcolormesh(example['logalpha'])
 plt.show()
+"""
+"""
+beta, likelihood = backward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
+
+plt.pcolormesh(beta)
+plt.show()
+plt.pcolormesh(example['logbeta'])
+plt.show()
 #print(wordHMMs['o']['transmat'].shape)
 #print(obsloglik.shape)
+"""
+alpha, likelihood = forward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
+beta, likelihood = backward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
+print(alpha.all() == example['logalpha'].all())
+print(beta.all() == example['logbeta'].all())
+gamma = statePosteriors(alpha, beta)
+print(gamma.all() == example['loggamma'].all())
+plt.pcolormesh(gamma)
+plt.show()
+plt.pcolormesh(example['loggamma'])
+plt.show()
 
 """ 5.1 plots
 obsloglik_z = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['z']['means'], wordHMMs['z']['covars'])
