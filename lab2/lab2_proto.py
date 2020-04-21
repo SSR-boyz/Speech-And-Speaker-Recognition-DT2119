@@ -4,6 +4,7 @@ from prondict import prondict
 import matplotlib.pyplot as plt
 phoneHMMs = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
 example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
+data = np.load('lab2_data.npz', allow_pickle=True)['data']
 
 def concatTwoHMMs(hmm1, hmm2):
     """ Concatenates 2 HMM models
@@ -223,15 +224,67 @@ def updateMeanAndVar(X, log_gamma, varianceFloor=5.0):
          X: NxD array of feature vectors
          log_gamma: NxM state posterior probabilities in log domain
          varianceFloor: minimum allowed variance scalar
-    were N is the lenght of the observation sequence, D is the
-    dimensionality of the feature vectors and M is the number of
-    states in the model
+         were N is the lenght of the observation sequence, D is the
+         dimensionality of the feature vectors and M is the number of
+         states in the model
 
     Outputs:
          means: MxD mean vectors for each state
          covars: MxD covariance (variance) vectors for each state
     """
+    N, M = log_gamma.shape
+    D = X.shape[1]
+    gamma = np.exp(log_gamma)
 
+    # Means
+    means = gamma.T @ X
+    denominator = np.sum(gamma, axis=0).reshape(-1, 1)
+    means = np.divide(means, denominator)
+
+    # Covars
+    covars = np.zeros([M,D])
+    for state in range(M):
+        nom = 0
+        for timestep in range(N):
+            #print(np.shape((X[timestep, :] - means[state, :])))
+            nom += gamma[timestep, state] * ((X[timestep, :] - means[state, :]).reshape(-1,1) @ (X[timestep, :]  - means[state, :]).reshape(-1,1).T)
+        covars[state] = np.divide(nom.diagonal(), denominator[state])
+
+    covars[np.where(covars < varianceFloor)] = varianceFloor
+    return means, covars
+    
+
+def baum_welch(data, wordHMM, settings):
+    """ 
+    1. Expectation: compute the alpha, beta and gamma probabilities for the utterance, given the
+       current model parameters (using your functions forward(), backward() and statePosteriors())
+    
+    2. Maximization: update the means µjk and variances σ ik given the sequence of feature vectors
+       and the gamma probabilities (using updateMeanAndVar())
+        
+    3. estimate the likelihood of the data given the new model, if the likelihood has increased, go
+       back to 1
+    """
+    old_lik = np.NINF
+    likelihood = 0
+    for it in range(settings['max_iter']):
+        obsloglik = log_multivariate_normal_density_diag(data, wordHMM['means'], wordHMM['covars'])
+        alpha, likelihood = forward(obsloglik, wordHMM['startprob'][:-1], wordHMM['transmat'][:-1, :-1])
+        beta, likelihood_beta = backward(obsloglik, wordHMM['startprob'][:-1], wordHMM['transmat'][:-1, :-1])
+        gamma = statePosteriors(alpha, beta)
+        wordHMM['means'], wordHMM['covars'] = updateMeanAndVar(data, gamma)
+
+        if np.isnan(likelihood):
+            likelihood = old_lik
+            break
+
+        if old_lik + settings['threshold'] > likelihood:
+            likelihood = old_lik
+            break
+
+        old_lik = likelihood
+    
+    return likelihood, it+1
 
 ### WORK
 
@@ -241,44 +294,20 @@ maxlikelihood = 0
 for digit in prondict:
     isolated[digit] = ['sil'] + prondict[digit] + ['sil']
     wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
-    #obsloglik = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs[digit]['means'], wordHMMs[digit]['covars'])
-    #alpha, likelihood = forward(obsloglik, wordHMMs[digit]['startprob'][:-1], wordHMMs[digit]['transmat'][:-1, :-1])
-    #print(likelihood)
+    
+settings = {
+    "max_iter" : 20,
+    "threshold" : 1.0
+}
 
+for digit in prondict:
+    best_lik, it = baum_welch(data[10]['lmfcc'], wordHMMs[digit], settings)
+    print("HMM model: " + str(digit) + ", Best likelihood: " + str(best_lik) + ", Total iter: " + str(it))
 
-obsloglik = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'], wordHMMs['o']['covars'])
-
-#print(wordHMMs['o']['startprob'].shape)
-#print(wordHMMs['o']['transmat'].shape)
-"""
-alpha, likelihood = forward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
-print(likelihood)
-print(example['loglik'])
-plt.pcolormesh(alpha)
-plt.show()
-plt.pcolormesh(example['logalpha'])
-plt.show()
-"""
-"""
-beta, likelihood = backward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
-
-plt.pcolormesh(beta)
-plt.show()
-plt.pcolormesh(example['logbeta'])
-plt.show()
-#print(wordHMMs['o']['transmat'].shape)
-#print(obsloglik.shape)
-"""
-alpha, likelihood = forward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
-beta, likelihood = backward(obsloglik, wordHMMs['o']['startprob'][:-1], wordHMMs['o']['transmat'][:-1, :-1])
-print(alpha.all() == example['logalpha'].all())
-print(beta.all() == example['logbeta'].all())
-gamma = statePosteriors(alpha, beta)
-print(gamma.all() == example['loggamma'].all())
-plt.pcolormesh(gamma)
-plt.show()
-plt.pcolormesh(example['loggamma'])
-plt.show()
+#plt.pcolormesh(gamma)
+#plt.show()
+#plt.pcolormesh(example['loggamma'])
+#plt.show()
 
 """ 5.1 plots
 obsloglik_z = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['z']['means'], wordHMMs['z']['covars'])
