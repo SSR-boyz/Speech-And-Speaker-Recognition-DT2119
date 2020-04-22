@@ -13,11 +13,11 @@
 ### Lab 2 - Hidden Markov Models with Gaussian Emissions
 - [X] Combine phonetic HMMs into word HMMs using a lexicon 
 - [X] Implement the forward-backward algorithm, 
-- [ ] Use it compute the log likelihood of spoken utterances given a Gaussian HMM 
-- [ ] Perform isolated word recognition 
-- [ ] Implement the Viterbi algorithm, and use it to compute Viterbi path and likelihood 
-- [ ] Compare and comment Viterbi and Forward likelihoods 
-- [ ] ImplementtheBaum-Welch algorithm toupdatetheparametersoftheemissionprobability distributions
+- [X] Use it compute the log likelihood of spoken utterances given a Gaussian HMM 
+- [X] Perform isolated word recognition 
+- [X] Implement the Viterbi algorithm, and use it to compute Viterbi path and likelihood 
+- [X] Compare and comment Viterbi and Forward likelihoods 
+- [X] ImplementtheBaum-Welch algorithm toupdatetheparametersoftheemissionprobability distributions
 
 ### Lab 3 - Phoneme Recognition with Deep Neural Network
 - [ ] Using predeﬁned Gaussian-emission HMM phonetic models, create time aligned phonetic transcriptions of the TIDIGITS database, 
