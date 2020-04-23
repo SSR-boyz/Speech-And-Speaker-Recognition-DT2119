@@ -2,9 +2,6 @@ import numpy as np
 from lab2_tools import *
 from prondict import prondict
 import matplotlib.pyplot as plt
-phoneHMMs = np.load('lab2_models_onespkr.npz', allow_pickle=True)['phoneHMMs'].item()
-example = np.load('lab2_example.npz', allow_pickle=True)['example'].item()
-data = np.load('lab2_data.npz', allow_pickle=True)['data']
 
 def concatTwoHMMs(hmm1, hmm2):
     """ Concatenates 2 HMM models
@@ -286,35 +283,4 @@ def baum_welch(data, wordHMM, settings):
     
     return likelihood, it+1
 
-### WORK
 
-isolated = {}
-wordHMMs = {}
-maxlikelihood = 0
-for digit in prondict:
-    isolated[digit] = ['sil'] + prondict[digit] + ['sil']
-    wordHMMs[digit] = concatHMMs(phoneHMMs, isolated[digit])
-  
-settings = {
-    "max_iter" : 20,
-    "threshold" : 1.0
-}
-
-for digit in prondict:
-    best_lik, it = baum_welch(data[10]['lmfcc'], wordHMMs[digit], settings)
-    print("HMM model: " + str(digit) + ", Best likelihood: " + str(best_lik) + ", Total iter: " + str(it))
-
-#plt.pcolormesh(gamma)
-#plt.show()
-#plt.pcolormesh(example['loggamma'])
-#plt.show()
-
-""" 5.1 plots
-obsloglik_z = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['z']['means'], wordHMMs['z']['covars'])
-obsloglik_o = log_multivariate_normal_density_diag(example['lmfcc'], wordHMMs['o']['means'], wordHMMs['o']['covars'])
-print(wordHMMs.keys())
-plt.pcolormesh(obsloglik_o)
-plt.show()
-plt.pcolormesh(obsloglik_z)
-plt.show()
-"""
