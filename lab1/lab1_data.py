@@ -53,3 +53,4 @@ for idx in range(len(speakers)):
 
 np.savez('lab1_data.npz', data=data)
 
+

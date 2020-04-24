@@ -4,6 +4,7 @@ from lab1_proto import mfcc
 from prondict import prondict
 from lab2_proto import *
 import os
+from tqdm import tqdm
 
 phoneHMMs = np.load('../lab2/lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
 
@@ -112,9 +113,8 @@ def generate_data():
    except IOError:
       print("-----File not found: reading in the training data-----")
       traindata = []
-      it = 0
       for root, dirs, files in os.walk('../../tidigits/disc_4.1.1/tidigits/train'):
-         for file_ in files:
+         for file_ in tqdm(files):
             if file_.endswith('.wav'):
                filename = os.path.join(root, file_)
                samples, samplingrate = loadAudio(filename)
@@ -122,8 +122,6 @@ def generate_data():
                lmfcc, mspec, targets = extraction_and_forced_alignment(samples, filename)
 
                traindata.append({'filename': filename, 'lmfcc': lmfcc, 'mspec': mspec, 'targets': targets})
-            it = it + 1
-            print("Train: " + str(it) + " of " + str(len(files) * len(dirs)))
       np.savez('traindata.npz', traindata=traindata)
       training_data = traindata
    
@@ -134,10 +132,9 @@ def generate_data():
       print("------------File found: loaded testing data------------")
    except IOError:
       print("------File not found: reading in the testing data------")
-      it = 0
       testdata = []
       for root, dirs, files in os.walk('../../tidigits/disc_4.2.1/tidigits/test'):
-         for file_ in files:
+         for file_ in tqdm(files):
             if file_.endswith('.wav'):
                filename = os.path.join(root, file_)
                samples, samplingrate = loadAudio(filename)
@@ -145,8 +142,6 @@ def generate_data():
                lmfcc, mspec, targets = extraction_and_forced_alignment(samples, filename)
 
                testdata.append({'filename': filename, 'lmfcc': lmfcc, 'mspec': mspec, 'targets': targets})
-            it = it + 1
-            print("Test: " + str(it) + " of " + str(len(files) * len(dirs)))
       np.savez('testdata.npz', testdata=testdata)
       test_data = testdata
    
@@ -160,7 +155,7 @@ def generate_data():
       speakerIDs = ['ae', 'aj', 'al', 'aw', 'bd', 'ac', 'ag', 'ai', 'an', 'bh', 'bi']
       valdata = []
       traindata = []
-      for i in range(len(training_data)):
+      for i in tqdm(range(len(training_data))):
          gender, speakerID, digits, repetition = path2info(training_data[i]['filename'])
          if speakerID in speakerIDs:
             valdata.append(training_data[i])
@@ -174,17 +169,109 @@ def generate_data():
    return training_data, val_data, test_data
 
 def dynamic_features(train_data, val_data, test_data, stack_size=7):
-   last_timestep, _ = train_data[0]['lmfcc'].shape
-   feature_list = np.concatenate((np.array([3, 2, 1]), np.arange(last_timestep), np.array([65, 64, 63])), axis=None)
 
-   """ TODO
-   for sample in train_data:
-      for timestep, feature in enumerate(sample):
+   traindata_dyn = None
+   testdata_dyn = None
+   valdata_dyn = None
+
+   try:
+      print("-----------Trying to load file: traindata_dyn.npz-----------")
+      traindata_dyn = np.load("traindata_dyn.npz", allow_pickle=True)
+   except IOError:
+      print("-----------File not found, creating traindata_dyn.npz-----------")
+      for sample in tqdm(train_data):
+         for key in sample.keys():
+            if key == "filename":
+               continue
+            last_timestep = len(sample[key])
+            feature_list = np.concatenate((np.array([3, 2, 1]), np.arange(last_timestep), np.array([last_timestep-2, last_timestep-3, last_timestep-4])), axis=None)
+            dyn_list = []
+            if key == "targets":
+               dyn_feat = np.empty((stack_size, len(sample[key][0])), dtype="str")
+            else:
+               dyn_feat = np.empty((stack_size, len(sample[key][0])))
+            for timestep in range(len(sample[key])):
+               dyn_feat[0] = sample[key][feature_list[timestep]]
+               dyn_feat[1] = sample[key][feature_list[timestep+1]]
+               dyn_feat[2] = sample[key][feature_list[timestep+2]]
+               dyn_feat[3] = sample[key][feature_list[timestep+3]]
+               dyn_feat[4] = sample[key][feature_list[timestep+4]]
+               dyn_feat[5] = sample[key][feature_list[timestep+5]]
+               dyn_feat[6] = sample[key][feature_list[timestep+6]]
+               dyn_list.append(dyn_feat)
+
+            sample[key] = np.array(dyn_list)
             
-            sample['lmfcc'][feature_list[timestep]]
-   """
+            
+      traindata_dyn = train_data
+      np.savez('traindata_dyn.npz', traindata_dyn=traindata_dyn)
+   
+   try:
+      print("-----------Trying to load file: testdata_dyn.npz-----------")
+      testdata_dyn = np.load("testdata_dyn.npz", allow_pickle=True)
+   except IOError:
+      print("-----------File not found, creating testdata_dyn.npz-----------")
+      for sample in tqdm(test_data):
+         for key in sample.keys():
+            if key == "filename":
+               continue
+            last_timestep = len(sample[key])
+            feature_list = np.concatenate((np.array([3, 2, 1]), np.arange(last_timestep), np.array([last_timestep-2, last_timestep-3, last_timestep-4])), axis=None)
+            dyn_list = []
+            if key == "targets":
+               dyn_feat = np.empty((stack_size, len(sample[key][0])), dtype="str")
+            else:
+               dyn_feat = np.empty((stack_size, len(sample[key][0])))
+            for timestep in range(len(sample[key])):
+               dyn_feat[0] = sample[key][feature_list[timestep]]
+               dyn_feat[1] = sample[key][feature_list[timestep+1]]
+               dyn_feat[2] = sample[key][feature_list[timestep+2]]
+               dyn_feat[3] = sample[key][feature_list[timestep+3]]
+               dyn_feat[4] = sample[key][feature_list[timestep+4]]
+               dyn_feat[5] = sample[key][feature_list[timestep+5]]
+               dyn_feat[6] = sample[key][feature_list[timestep+6]]
+               dyn_list.append(dyn_feat)
+
+            sample[key] = np.array(dyn_list)
+            
+            
+      testdata_dyn = test_data
+      np.savez('testdata_dyn.npz', testdata_dyn=testdata_dyn)
+
+
+   try:
+      print("-----------Trying to load file: valdata_dyn.npz-----------")
+      valdata_dyn = np.load("valdata_dyn.npz", allow_pickle=True)
+   except IOError:
+      print("-----------File not found, creating valdata_dyn.npz-----------")
+      for sample in tqdm(val_data):
+         for key in sample.keys():
+            if key == "filename":
+               continue
+            last_timestep = len(sample[key])
+            feature_list = np.concatenate((np.array([3, 2, 1]), np.arange(last_timestep), np.array([last_timestep-2, last_timestep-3, last_timestep-4])), axis=None)
+            dyn_list = []
+            if key == "targets":
+               dyn_feat = np.empty((stack_size, len(sample[key][0])), dtype="str")
+            else:
+               dyn_feat = np.empty((stack_size, len(sample[key][0])))
+            for timestep in range(len(sample[key])):
+               dyn_feat[0] = sample[key][feature_list[timestep]]
+               dyn_feat[1] = sample[key][feature_list[timestep+1]]
+               dyn_feat[2] = sample[key][feature_list[timestep+2]]
+               dyn_feat[3] = sample[key][feature_list[timestep+3]]
+               dyn_feat[4] = sample[key][feature_list[timestep+4]]
+               dyn_feat[5] = sample[key][feature_list[timestep+5]]
+               dyn_feat[6] = sample[key][feature_list[timestep+6]]
+               dyn_list.append(dyn_feat)
+
+            sample[key] = np.array(dyn_list)
+            
+      valdata_dyn = val_data
+      np.savez('valdata_dyn.npz', valdata_dyn=valdata_dyn)
+   
+   return traindata_dyn, valdata_dyn, testdata_dyn
 
 train_data, val_data, test_data = generate_data()
-
-print(train_data[0].keys())
+traindata_dyn, valdata_dyn, testdata_dyn = dynamic_features(train_data, val_data, test_data)
    
