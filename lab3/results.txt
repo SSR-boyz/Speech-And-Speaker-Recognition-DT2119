@@ -1,0 +1,41 @@
+MODEL FOR EVERY TYPE
+
+self.model = Sequential([
+    Dense(256, input_dim=91/280/, activation='relu'),
+    Dense(256, activation='relu'),
+    Dense(256, activation='relu'),
+    Dense(output_dim, activation='softmax')
+])
+
+self.model.compile(optimizer='adam',
+loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+metrics=['accuracy'])
+
+
+DYN_LMFCC RESULTS:
+
+Epoch 10/10
+1372948/1372948 [==============================] - 73s 53us/step - loss: 0.6630 - accuracy: 0.7907
+Test loss: 0.8729974333913262 , Test accuracy: 0.7506535649299622
+------------------------------------------------------------------------------------------------
+DYN_MSPEC RESULTS:
+
+Epoch 10/10
+1372948/1372948 [==============================] - 83s 60us/step - loss: 0.7457 - accuracy: 0.7692
+Test loss: 1.0138340616333135 , Test accuracy: 0.715485155582428
+------------------------------------------------------------------------------------------------
+MSPEC RESULTS: 
+Epoch 10/10
+1372948/1372948 [==============================] - 70s 51us/step - loss: 3.6877 - accuracy: 0.1389   
+Test loss: 3.6828009027277653 , Test accuracy: 0.14629843831062317
+------------------------------------------------------------------------------------------------
+LMFCC RESULTS:
+Epoch 10/10
+1372948/1372948 [==============================] - 74s 54us/step - loss: 3.6902 - accuracy: 0.1390
+Test loss: 3.6850449553657043 , Test accuracy: 0.14632059633731842
+------------------------------------------------------------------------------------------------
+DYNAMIC LMFCC WITH FRAME BY FRAME ACCURACY
+Epoch 10/10
+1372948/1372948 [==============================] - 70s 51us/step - loss: 0.6555 - accuracy: 0.7908
+frame-by-frame accuracy: 0.8452235339479035
+------------------------------------------------------------------------------------------------
