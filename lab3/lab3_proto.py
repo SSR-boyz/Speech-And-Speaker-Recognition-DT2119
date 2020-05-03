@@ -440,11 +440,12 @@ train_y, val_y, test_y, output_dim, stateList = to_categorical_targets()
 
 
 print("Starting training for dyn_lmfcc")
+
 model = NN_Model(output_dim, "dyn_lmfcc")
 model.model = load_model('lmfcc_model.h5')
 #model.fit(lmfcc_train_x, train_y, n_epochs=10)
 #test_loss, test_acc = model.evaluate(lmfcc_test_x, test_y)
-test_acc = model.predict_state_distance(lmfcc_test_x, test_y, stateList)
-print("State Distance Accuracy: " + str(test_acc))
+test_acc = model.predict_phoneme_distance(lmfcc_test_x, test_y, stateList)
+print("Phone Error Rate (Phoneme Level): " + str(test_acc))
 #model.model.save('lmfcc_model.h5')
 #print("Test loss: " + str(test_loss) + " , " + "Test accuracy: " + str(test_acc))

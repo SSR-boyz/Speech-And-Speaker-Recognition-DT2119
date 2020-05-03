@@ -1,7 +1,7 @@
 MODEL FOR EVERY TYPE
 
 self.model = Sequential([
-    Dense(256, input_dim=91/280/, activation='relu'),
+    Dense(256, input_dim=13/40/91/280, activation='relu'),
     Dense(256, activation='relu'),
     Dense(256, activation='relu'),
     Dense(output_dim, activation='softmax')
@@ -39,3 +39,26 @@ Epoch 10/10
 1372948/1372948 [==============================] - 70s 51us/step - loss: 0.6555 - accuracy: 0.7908
 frame-by-frame accuracy: 0.8452235339479035
 ------------------------------------------------------------------------------------------------
+PHONE ERROR RATE (PER) AT STATE LEVEL
+Targ Length: 307691
+Pred Length: 407974
+
+Distance: 169482
+Phone Error Rate: 0.5508188409800742
+------------------------------------------------------------------------------------------------
+PHONE ERROR RATE (PER) AT PHONEME LEVEL
+
+(Doing step 2 then 3)
+Target Length: 96830
+Prediction Length: 205581
+
+Distance: 111782
+Phone Error Rate (Phoneme Level): 1.1544149540431685
+
+(Doing step 3 then 2)
+Target Length: 307691
+Prediction Length: 407974
+
+Distance: 151962
+Phone Error Rate (Phoneme Level): 0.4938785989840457
+-------------------------------------------------------------------------------------------------
