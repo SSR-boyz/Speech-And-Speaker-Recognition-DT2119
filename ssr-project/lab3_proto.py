@@ -11,7 +11,7 @@ from models import *
 from keras.models import load_model
 
 
-phoneHMMs = np.load('../dt2119_lab2_2019-04-02/lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
+phoneHMMs = np.load('../../dt2119_lab2_2019-04-02/lab2_models_all.npz', allow_pickle=True)['phoneHMMs'].item()
 
 def words2phones(wordList, pronDict, addSilence=True, addShortPause=True):
 	""" word2phones: converts word level to phone level transcription adding silence
