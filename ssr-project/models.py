@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from keras import regularizers, Input
 from keras.models import Sequential
-from keras.layers import Dense, Masking, Bidirectional, TimeDistributed, LSTM, Conv1D, Flatten
+from keras.layers import Dense, Masking, Bidirectional, TimeDistributed, LSTM, Conv1D, Flatten, Conv2D
 from string import digits
 #from Levenshtein import distance
 import stringdist
@@ -17,9 +17,9 @@ class NN_Model:
     def __init__(self, settings):
         if settings['option'] == "FC1":
             self.model = Sequential([
-                Dense(256, input_dim=91, activation='relu'),
-                Dense(256, activation='relu'),
-                Dense(256, activation='relu'),
+                Dense(2000, input_dim=settings['features'], activation='relu'),
+                Dense(1000, activation='relu'),
+                Dense(1000, activation='relu'),
                 Dense(settings['output_dim'], activation='softmax')
             ])
 
@@ -27,6 +27,8 @@ class NN_Model:
             loss='categorical_crossentropy',
             metrics=['accuracy'])
         
+        # CNN1 inspiration: https://www.researchgate.net/publication/317379506_Automatic_Speech_Recognition_using_different_Neural_Network_Architectures_-_A_Survey
+
         if settings['option'] == "CNN1":
             self.model = Sequential()
 
@@ -53,6 +55,31 @@ class NN_Model:
             self.model.compile(optimizer=optimizer,
             loss='categorical_crossentropy',
             metrics=['accuracy'])
+        
+        # CNN2 inspiration from: http://cs229.stanford.edu/proj2017/final-reports/5244201.pdf
+
+        if settings['option'] == "CNN2":
+            self.model = Sequential()
+
+            self.model.add(Conv2D(filters=64, kernel_size=(20, 8), strides=(1, 3), activation='relu', input_shape=(settings['features'], 1, 1), padding='same'))
+
+            self.model.add(Conv2D(filters=64, kernel_size=(10, 4), strides=(1,1), activation='relu', padding='same'))
+
+            self.model.add(Flatten())
+
+            self.model.add(Dense(128, activation='relu'))
+
+            self.model.add(Dense(settings['output_dim'], activation='softmax'))
+
+            if settings['learning_rate'] == None:
+                    optimizer = tf.keras.optimizers.Adam()
+            else:
+               optimizer = tf.keras.optimizers.Adam(learning_rate=settings['learning_rate'])
+            
+            self.model.compile(optimizer=optimizer,
+            loss='categorical_crossentropy',
+            metrics=['accuracy'])
+
         
     def fit(self, data, labels, settings):
         self.model.fit(data, labels, epochs=settings['n_epochs'])
@@ -169,9 +196,8 @@ class NN_Model:
             result_targets[j] = s.translate(remove_digits)
         
         accuracy = float(np.sum(phones == result_targets)/len(result_targets))
-        
-        loss = 0
-        return loss, accuracy
+
+        return accuracy
         
     def evaluate(self, test_data, test_labels):
         test_loss, test_acc = self.model.evaluate(test_data, test_labels, verbose=2)
