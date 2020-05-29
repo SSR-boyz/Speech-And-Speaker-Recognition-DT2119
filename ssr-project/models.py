@@ -7,7 +7,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Masking, Bidirectional, TimeDistributed, LSTM, Conv1D, Flatten, Conv2D
 from string import digits
 #from Levenshtein import distance
-import stringdist
+#import stringdist
 from tqdm import tqdm
 
 #Levenshtein.distance
@@ -84,6 +84,7 @@ class NN_Model:
     def fit(self, data, labels, settings):
         self.model.fit(data, labels, epochs=settings['n_epochs'])
     
+    '''
     def predict_phoneme_distance(self, test_data, labels, stateList):
         predictions_oh = self.model.predict(test_data)
 
@@ -180,7 +181,7 @@ class NN_Model:
         diff = distance(targ, pred)
         print("Distance: " + str(diff))
         return float(diff/len(targ))
-        
+    '''
     def predict_merge(self, test_data, labels, stateList):
         predictions_oh = self.model.predict(test_data)
         predictions = np.argmax(predictions_oh, axis=1)
