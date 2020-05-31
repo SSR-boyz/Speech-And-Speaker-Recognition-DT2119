@@ -298,22 +298,31 @@ def dynamic_features(train_data=None, val_data=None, test_data=None, stack_size=
 # Feature Standardisation
 def process_data(traindata_dyn, valdata_dyn, testdata_dyn):
 	print("Processing data")
-	#TODO
+    N = 0
 
-def extract_data(x, key):
-	N = 0
-	D = x[0][key].shape[1]
-	for i in range(len(x)):
-		N += x[i][key].shape[0]
-	
-	new_x = np.zeros((N, D))
-	prevIdx = 0
-	for i in range(len(x)):
-		n = x[i][key].shape[0]
-		new_x[prevIdx:prevIdx+n] = x[i][key]
-		n += prevIdx
-	
-	return new_x
+    if key == "targets":
+        D = 1
+    else:
+        D = x[0][key].shape[1] * x[0][key].shape[2]
+    
+    for i in range(len(x)):
+        N += x[i][key].shape[0]
+    print(N)
+    if key == "targets":
+        new_x = np.zeros((N, D), dtype="object")
+    else: 
+        new_x = np.zeros((N, D))
+    prev_idx = 0
+    for i in range(len(x)):
+        n = x[i][key].shape[0]
+        if key == "targets":
+            new_x[prev_idx:prev_idx+n, 0] = x[i][key]
+        else:
+            new_x[prev_idx:prev_idx+n] = x[i][key].reshape((n, D))
+
+        n += prev_idx
+    
+    return new_x
 
 def normalise_data():
     	
